@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PharmTrack – Pharmacy inventory &amp; expiry prediction</title>
+<style>
+:root{--bg:#f3f6fb;--surf:#fff;--ink:#1f2328;--mute:#5d6872;--line:#dde4ee;--nav:#1c4e8a;--brand:#1c4e8a;--safe:#2e9e5b;--safeb:#e1f3e8;--warn:#b86e0c;--warnb:#fdebd2;--dang:#b3261e;--dangb:#fde7e5;--sub:#eef1f7;--bar:#e3e8ef;color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1420;--surf:#161e2d;--ink:#e6ebf2;--mute:#9aa7b8;--line:#27344a;--nav:#12335c;--brand:#6aa7f0;--safe:#4cc77f;--safeb:#14301f;--warn:#f0aa4d;--warnb:#3a2a12;--dang:#ff7a70;--dangb:#3b1a18;--sub:#1b2638;--bar:#27344a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1420;--surf:#161e2d;--ink:#e6ebf2;--mute:#9aa7b8;--line:#27344a;--nav:#12335c;--brand:#6aa7f0;--safe:#4cc77f;--safeb:#14301f;--warn:#f0aa4d;--warnb:#3a2a12;--dang:#ff7a70;--dangb:#3b1a18;--sub:#1b2638;--bar:#27344a;color-scheme:dark}
+*{box-sizing:border-box}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",Inter,system-ui,-apple-system,Roboto,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--nav);z-index:30}
+h1,h2,h3{margin:0;line-height:1.2}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.hide{display:none!important}
+.muted{color:var(--mute)}
+.btn{background:var(--nav);color:#fff;border:1px solid var(--nav);border-radius:6px;padding:.55rem 1rem;cursor:pointer}
+.btn.ghost{background:transparent;border-color:rgba(255,255,255,.7);padding:.3rem .8rem}
+.btn.alt{background:var(--sub);color:var(--ink);border-color:var(--line)}
+.btn.sm{padding:.3rem .65rem;font-size:13px}
+.btn:disabled{opacity:.5;cursor:default}
+/* login */
+#auth{min-height:100vh;display:grid;place-items:center;padding:1.5rem}
+#login{width:100%;max-width:380px;background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:2rem 1.7rem;text-align:center}
+#login h1{font-size:1.5rem}
+#login p.sub{margin:.2rem 0 1.2rem;color:var(--mute)}
+#login label{display:block;text-align:left;font-size:13px;color:var(--mute);margin:.9rem 0 .3rem}
+input,select{width:100%;background:var(--surf);border:1px solid var(--line);border-radius:6px;padding:.6rem .7rem}
+#login .btn{width:100%;margin-top:1.1rem;padding:.7rem}
+.err{color:var(--dang);font-size:13px;min-height:1.2em;margin:.6rem 0 0;text-align:left}
+.sw{margin:1rem 0}
+.sw a{color:var(--brand);cursor:pointer;text-decoration:none}
+.demo{background:var(--sub);border-radius:6px;padding:.8rem .9rem;text-align:left;font-size:13px;color:var(--mute)}
+/* app */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--nav);color:#fff;display:flex;align-items:stretch;justify-content:space-between;gap:1rem;padding:0 clamp(1rem,2vw,1.6rem);min-height:48px}
+.nav b{font-size:1.15rem;display:flex;align-items:center;white-space:nowrap}
+.tabs{display:flex;gap:.2rem;overflow-x:auto}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;color:#dbe6f5;padding:0 .7rem;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:#fff;border-bottom-color:#f0b347}
+.who{display:flex;align-items:center;gap:.7rem;font-size:14px;white-space:nowrap}
+.page{max-width:1080px;margin:0 auto;padding:1.8rem 1rem 3rem}
+.page h1{font-size:1.65rem}
+.page>p.muted{margin:.3rem 0 1.2rem}
+.banner{background:var(--dangb);border:1px solid color-mix(in srgb,var(--dang) 35%,transparent);color:var(--dang);border-radius:6px;padding:.75rem 1rem;margin-bottom:1.1rem}
+.banner.ok{background:var(--safeb);color:var(--safe);border-color:transparent}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.2rem}
+.box{background:var(--surf);border:1px solid var(--line);border-radius:8px}
+.kpi{padding:1rem 1.1rem}
+.kpi b{font-size:1.9rem;font-weight:600;display:block;line-height:1.2}
+.kpi small{color:var(--mute)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.mc{background:var(--surf);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:1rem 1.1rem;cursor:pointer;text-align:left;width:100%}
+.mc:hover{border-color:var(--c)}
+.mc .r{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem}
+.mc strong{font-size:1.05rem}
+.mc small{color:var(--mute)}
+.mc .big{font-size:2.1rem;font-weight:600;margin:.5rem 0 .4rem}
+.mc .big span{font-size:.9rem;font-weight:400;color:var(--mute)}
+.pb{height:8px;border-radius:4px;background:var(--bar);overflow:hidden;margin-bottom:.6rem}
+.pb i{display:block;height:100%;background:var(--c)}
+.mc .f{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);margin-top:.3rem}
+.b{display:inline-block;padding:.1rem .6rem;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.Safe{background:var(--safeb);color:var(--safe)}.Warning{background:var(--warnb);color:var(--warn)}.Danger{background:var(--dangb);color:var(--dang)}
+.c-Safe{--c:var(--safe)}.c-Warning{--c:var(--warn)}.c-Danger{--c:var(--dang)}
+.tools{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem}
+.tools input{flex:1 1 220px;width:auto}.tools select{width:auto;flex:0 1 180px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{background:var(--surf);border:0;padding:.5rem .8rem;cursor:pointer;color:var(--mute)}
+.seg button.on{background:var(--nav);color:#fff}
+.tw{overflow-x:auto;border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:760px}
+th{text-align:left;font-weight:600;color:var(--mute);font-size:13px;padding:.7rem .8rem;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--sub)}
+td{padding:.65rem .8rem;border-bottom:1px solid var(--line)}
+tbody tr{cursor:pointer}tbody tr:hover{background:var(--sub)}
+td.n{font-variant-numeric:tabular-nums}
+.pg{display:flex;justify-content:space-between;align-items:center;padding:.8rem 0;font-size:13px;gap:.6rem;flex-wrap:wrap}
+.al{background:var(--surf);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:.7rem 1rem;margin-bottom:.6rem;display:flex;justify-content:space-between;gap:1rem;cursor:pointer;flex-wrap:wrap}
+#modal{position:fixed;inset:0;background:rgba(5,15,30,.6);z-index:40;display:grid;place-items:center;padding:1rem}
+#modal .box{max-width:680px;width:100%;max-height:88vh;overflow:auto;padding:1.4rem}
+.dl{display:grid;grid-template-columns:140px 1fr;gap:.5rem 1rem;margin:1rem 0;font-size:14px}
+.dl dt{color:var(--mute)}.dl dd{margin:0}
+.empty{padding:2rem;text-align:center;color:var(--mute)}
+@media(max-width:860px){.kpis{grid-template-columns:1fr 1fr}.cards{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.cards{grid-template-columns:1fr}.nav{flex-wrap:wrap;padding-top:.5rem}.nav b{flex:1}.tabs{order:3;width:100%}.tabs button{padding:.6rem .7rem}.who span{display:none}.dl{grid-template-columns:1fr}}
+
+/* Reference dashboard styling */
+:root,:root[data-theme="dark"]{--bg:#f1f5fa;--surf:#fff;--ink:#222;--mute:#666;--line:#dce1e7;--nav:#204d82;--brand:#204d82;--safe:#30975b;--safeb:#dff1e5;--warn:#df922c;--warnb:#fff0d8;--dang:#c83c32;--dangb:#fce9e7;--sub:#eef2f7;--bar:#e3e8ee;color-scheme:light}
+body{font:14px/1.5 "Segoe UI",Arial,sans-serif} .nav{min-height:48px;border-top:5px solid #39445a;padding:0 24px;align-items:stretch}.nav b{font-size:18px}.tabs button{font-size:14px}.who{font-size:13px}.page{max-width:1100px;padding:26px 20px 40px}.page h1{font-size:24px}.page>p.muted{margin:5px 0 18px}.box,.mc{border-radius:6px}.kpi{padding:16px 18px}.kpi b{font-size:29px}.mc{padding:16px 18px;border-left-width:5px;min-height:194px}.mc .big{font-size:30px}.mc strong{font-size:17px}.banner{padding:10px 16px}.kpis{margin-bottom:24px}.cards{gap:16px}.demo{padding:10px 12px}.btn{border-radius:4px}#login{border-radius:6px;padding:27px 25px;max-width:380px}#login h1{font-size:23px}#login input{padding:7px 10px}#login .btn{padding:7px;margin-top:10px}#login .err:empty{display:none}#login .btn{margin-top:14px}.demo-note{font-size:12px;color:var(--mute);margin:12px 0 0}.b.Warning{color:#92590b}.b.Danger{color:#a82c23}.b.Safe{color:#267747}
+@media(max-width:1000px){.nav{flex-wrap:wrap}.tabs{order:3;width:100%}.tabs button{padding:8px 10px}} 
+#auth{display:block;padding:0;min-height:100vh}.landing{max-width:1400px;margin:auto;padding:28px 24px;display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:24px;align-items:start}#login{max-width:none;position:sticky;top:76px}.public-overview h1{font-size:25px}.public-overview .kpis{grid-template-columns:repeat(3,1fr);gap:12px}.public-overview .cards{grid-template-columns:repeat(2,1fr)}.public-overview .mc{cursor:default;min-height:165px}.public-overview .mc:hover{border-color:var(--line);border-left-color:var(--c)}@media(max-width:900px){.landing{grid-template-columns:1fr}#login{position:static;max-width:440px} }@media(max-width:550px){.public-overview .kpis{grid-template-columns:repeat(2,1fr)}.public-overview .cards{grid-template-columns:1fr}.landing{padding:16px}}
+
+:root{--bg:#eef2f7;--ink:#142037;--mute:#8898b3;--nav:#4165e5;--brand:#4165e5;--line:#dce3ed;--sub:#f5f7fa}body{font:15px/1.5 "Segoe UI",Arial,sans-serif}.nav{background:white;color:#4165e5;border:0;min-height:64px;box-shadow:0 1px 4px #14203718;padding:0 3%;align-items:center}.nav b{font-size:21px}.tabs button{color:#344159;border:0;border-radius:10px;padding:8px 12px}.tabs button.on{background:#4165e5;color:white}.who,.who a{color:#344159!important}.btn.ghost{color:#4165e5;border-color:#4165e5}.page{max-width:1300px;padding:34px 20px}.page h1,.public-overview h1{font-size:29px}.five,.public-overview .five{grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}.metric{border-radius:15px;box-shadow:0 2px 4px #1420370a;padding:20px}.metric small{text-transform:uppercase;font-weight:700;font-size:12px;letter-spacing:.5px}.metric b{font-size:38px;color:var(--metric);margin-top:8px}.metric hr{border:0;height:2px;background:var(--metric);margin-bottom:0}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:22px}.panel{border-radius:15px;overflow:hidden;box-shadow:0 2px 4px #1420370a}.panel-head{background:#f5f7fa;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;font-weight:600;gap:12px;border-bottom:1px solid var(--line)}.panel-head input{max-width:240px;font-weight:400;background:#eef2f7}.mini{min-width:0}.summary-grid .panel{min-height:310px}.panel th{text-transform:uppercase;font-size:12px;letter-spacing:.4px}.landing{max-width:1500px;grid-template-columns:minmax(0,1fr) 320px}.public-overview .metric{padding:12px}.public-overview .metric b{font-size:30px}.public-overview .summary-grid{gap:12px}#login{border-radius:15px}.panel> .tw{max-height:620px;overflow:auto}@media(max-width:900px){.landing{grid-template-columns:1fr}.five,.public-overview .five{grid-template-columns:repeat(2,1fr)}.summary-grid{grid-template-columns:1fr}} 
+
+.landing{display:block;max-width:1300px;padding:34px 20px}.public-overview .metric{padding:20px}.public-overview .metric b{font-size:38px}.public-overview .summary-grid{gap:20px}.auth-left{display:flex;align-items:center;gap:16px}.auth-left .btn{white-space:nowrap}#accountDialog{position:fixed;inset:0;z-index:50;background:#14203788;display:grid;place-items:center;padding:20px}#login{position:relative;top:auto;width:100%;max-width:380px;max-height:90vh;overflow:auto}.account-close{position:absolute;right:12px;top:10px;border:0;background:none;cursor:pointer;font-size:24px}.demo-note{font-size:12px;color:var(--mute)}
+
+.nav b{font-size:30px;font-weight:800;letter-spacing:-.8px}.nav{min-height:76px;gap:14px;padding:10px 3%;flex-wrap:wrap}.auth-left{gap:10px}.tabs{flex:1;justify-content:flex-end;flex-wrap:wrap;overflow:visible}.tabs button{white-space:nowrap;font-size:14px;padding:8px 10px}.landing{width:100%;margin:0 auto}#auth{display:block;padding:0}.nav .who{flex-shrink:0}@media(max-width:1100px){.tabs{flex-basis:100%;justify-content:flex-start;order:3}.nav b{font-size:27px}}@media(max-width:480px){.auth-left{flex-wrap:wrap}.nav b{font-size:25px}.tabs button{font-size:12px;padding:6px}}
+
+.nav{display:flex;flex-direction:column;align-items:stretch;gap:0;padding:0 3%;min-height:0}.header-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0}.header-top b{font-size:clamp(26px,3vw,40px);font-weight:800;letter-spacing:-1px}.nav .tabs{display:flex;flex:none;order:0;width:100%;justify-content:flex-start;flex-wrap:wrap;gap:8px;padding:12px 0;border-top:1px solid var(--line)}.nav .tabs button{font-size:15px;padding:9px 16px}.summary-grid{grid-template-columns:1fr}.summary-grid .panel{min-height:0}.auth-left{flex-wrap:nowrap}.nav .who{white-space:normal}@media(max-width:600px){.header-top{flex-wrap:wrap}.nav .tabs button{font-size:13px;padding:7px 9px}}
+</style>
+</head>
+<body>
+<div id="app"><header class="nav"><div class="header-top"><b>💊 PharmTrack</b><span id="dbstatus" class="muted">Local demo</span></div><nav class="tabs" id="tabs"></nav></header><main class="page" id="main"></main></div>
+<div id="modal" class="hide"><div class="box" id="mbody" role="dialog" aria-modal="true"></div></div>
+<script>
+const RAW=`Paracetamol|an|250,500,650|mg
+Ibuprofen|an|200,400,600|mg
+Diclofenac|an|50,75,100|mg
+Aspirin|an|75,150,325|mg
+Naproxen|an|250,500,750|mg
+Tramadol|an|50,100,200|mg|Capsule
+Aceclofenac|an|100,150,200|mg
+Etoricoxib|an|60,90,120|mg
+Amoxicillin|ab|250,500,875|mg|Capsule
+Azithromycin|ab|250,500,1000|mg
+Ciprofloxacin|ab|250,500,750|mg
+Doxycycline|ab|50,100,200|mg|Capsule
+Cefixime|ab|100,200,400|mg
+Metronidazole|ab|200,400,500|mg
+Levofloxacin|ab|250,500,750|mg
+Clarithromycin|ab|250,500,750|mg
+Cefuroxime|ab|125,250,500|mg
+Co-amoxiclav|ab|375,625,1000|mg
+Ofloxacin|ab|100,200,400|mg
+Metformin|ad|500,850,1000|mg
+Glimepiride|ad|1,2,4|mg
+Gliclazide|ad|40,80,160|mg
+Sitagliptin|ad|25,50,100|mg
+Pioglitazone|ad|15,30,45|mg
+Vildagliptin|ad|50,100,150|mg
+Dapagliflozin|ad|5,10,20|mg
+Amlodipine|cv|2.5,5,10|mg
+Atenolol|cv|25,50,100|mg
+Losartan|cv|25,50,100|mg
+Telmisartan|cv|20,40,80|mg
+Atorvastatin|cv|10,20,40|mg
+Rosuvastatin|cv|5,10,20|mg
+Metoprolol|cv|25,50,100|mg
+Clopidogrel|cv|75,150,300|mg
+Ramipril|cv|2.5,5,10|mg
+Furosemide|cv|20,40,80|mg
+Enalapril|cv|2.5,5,10|mg
+Omeprazole|gi|10,20,40|mg|Capsule
+Pantoprazole|gi|20,40,80|mg
+Famotidine|gi|10,20,40|mg
+Domperidone|gi|10,20,30|mg
+Ondansetron|gi|4,8,16|mg
+Loperamide|gi|1,2,4|mg|Capsule
+Rabeprazole|gi|10,20,40|mg
+Esomeprazole|gi|20,40,80|mg|Capsule
+Bisacodyl|gi|5,10,15|mg
+Salbutamol|rs|100,200,400|mcg|Inhaler
+Montelukast|rs|4,5,10|mg
+Budesonide|rs|100,200,400|mcg|Inhaler
+Theophylline|rs|100,200,300|mg
+Ambroxol|rs|15,30,60|mg|Syrup
+Levosalbutamol|rs|50,100,200|mcg|Inhaler
+Cetirizine|al|5,10,20|mg
+Loratadine|al|5,10,20|mg
+Fexofenadine|al|60,120,180|mg
+Levocetirizine|al|2.5,5,10|mg
+Chlorpheniramine|al|2,4,8|mg
+Desloratadine|al|2.5,5,10|mg
+Sertraline|ne|25,50,100|mg
+Escitalopram|ne|5,10,20|mg
+Alprazolam|ne|0.25,0.5,1|mg
+Levetiracetam|ne|250,500,750|mg
+Gabapentin|ne|100,300,400|mg|Capsule
+Amitriptyline|ne|10,25,50|mg
+Carbamazepine|ne|100,200,400|mg
+Pregabalin|ne|75,150,300|mg|Capsule
+Clonazepam|ne|0.25,0.5,2|mg
+Vitamin D3|vt|1000,2000,60000|IU|Capsule
+Vitamin B12|vt|500,1000,1500|mcg
+Folic acid|vt|1,5,10|mg
+Iron + folic acid|vt|60,100,150|mg
+Calcium + D3|vt|250,500,1000|mg
+Zinc|vt|20,50,100|mg
+Vitamin C|vt|250,500,1000|mg
+Omega-3|vt|500,1000,1200|mg|Capsule
+Prednisolone|ot|5,10,20|mg
+Levothyroxine|ot|25,50,100|mcg
+Hydroxychloroquine|ot|200,300,400|mg
+Allopurinol|ot|100,200,300|mg
+Ivermectin|ot|3,6,12|mg
+Fluconazole|ot|50,150,200|mg
+Acyclovir|ot|200,400,800|mg
+Clotrimazole|ot|1,2,5|%|Cream
+Albendazole|ot|200,400,600|mg
+Mupirocin|ot|1,2,3|%|Ointment
+Tamsulosin|ot|0.2,0.4,0.8|mg|Capsule
+Betamethasone|ot|0.025,0.05,0.1|%|Cream
+Ketoprofen|ot|Demo| |Unspecified
+Sulindac|ot|Demo| |Unspecified
+Meloxicam|ot|Demo| |Unspecified
+Piroxicam|ot|Demo| |Unspecified
+Indomethacin|ot|Demo| |Unspecified
+Celecoxib|ot|Demo| |Unspecified
+Nabumetone|ot|Demo| |Unspecified
+Mefenamic acid|ot|Demo| |Unspecified
+Ketorolac|ot|Demo| |Unspecified
+Flurbiprofen|ot|Demo| |Unspecified
+Penicillin V|ot|Demo| |Unspecified
+Ampicillin|ot|Demo| |Unspecified
+Flucloxacillin|ot|Demo| |Unspecified
+Cloxacillin|ot|Demo| |Unspecified
+Cefalexin|ot|Demo| |Unspecified
+Cefadroxil|ot|Demo| |Unspecified
+Cefpodoxime|ot|Demo| |Unspecified
+Cefdinir|ot|Demo| |Unspecified
+Cefaclor|ot|Demo| |Unspecified
+Cefprozil|ot|Demo| |Unspecified
+Cefditoren|ot|Demo| |Unspecified
+Minocycline|ot|Demo| |Unspecified
+Tetracycline|ot|Demo| |Unspecified
+Erythromycin|ot|Demo| |Unspecified
+Roxithromycin|ot|Demo| |Unspecified
+Clindamycin|ot|Demo| |Unspecified
+Linezolid|ot|Demo| |Unspecified
+Nitrofurantoin|ot|Demo| |Unspecified
+Fosfomycin|ot|Demo| |Unspecified
+Rifampicin|ot|Demo| |Unspecified
+Ethambutol|ot|Demo| |Unspecified
+Isoniazid|ot|Demo| |Unspecified
+Pyrazinamide|ot|Demo| |Unspecified
+Acarbose|ot|Demo| |Unspecified
+Miglitol|ot|Demo| |Unspecified
+Repaglinide|ot|Demo| |Unspecified
+Nateglinide|ot|Demo| |Unspecified
+Linagliptin|ot|Demo| |Unspecified
+Saxagliptin|ot|Demo| |Unspecified
+Alogliptin|ot|Demo| |Unspecified
+Empagliflozin|ot|Demo| |Unspecified
+Canagliflozin|ot|Demo| |Unspecified
+Glipizide|ot|Demo| |Unspecified
+Bisoprolol|ot|Demo| |Unspecified
+Nebivolol|ot|Demo| |Unspecified
+Carvedilol|ot|Demo| |Unspecified
+Propranolol|ot|Demo| |Unspecified
+Labetalol|ot|Demo| |Unspecified
+Nifedipine|ot|Demo| |Unspecified
+Felodipine|ot|Demo| |Unspecified
+Diltiazem|ot|Demo| |Unspecified
+Verapamil|ot|Demo| |Unspecified
+Candesartan|ot|Demo| |Unspecified
+Irbesartan|ot|Demo| |Unspecified
+Olmesartan|ot|Demo| |Unspecified
+Valsartan|ot|Demo| |Unspecified
+Lisinopril|ot|Demo| |Unspecified
+Perindopril|ot|Demo| |Unspecified
+Captopril|ot|Demo| |Unspecified
+Spironolactone|ot|Demo| |Unspecified
+Eplerenone|ot|Demo| |Unspecified
+Torsemide|ot|Demo| |Unspecified
+Bumetanide|ot|Demo| |Unspecified
+Indapamide|ot|Demo| |Unspecified
+Chlorthalidone|ot|Demo| |Unspecified
+Hydrochlorothiazide|ot|Demo| |Unspecified
+Ezetimibe|ot|Demo| |Unspecified
+Fenofibrate|ot|Demo| |Unspecified
+Bezafibrate|ot|Demo| |Unspecified
+Pravastatin|ot|Demo| |Unspecified
+Simvastatin|ot|Demo| |Unspecified
+Ticagrelor|ot|Demo| |Unspecified
+Prasugrel|ot|Demo| |Unspecified
+Warfarin|ot|Demo| |Unspecified
+Apixaban|ot|Demo| |Unspecified
+Rivaroxaban|ot|Demo| |Unspecified
+Dabigatran|ot|Demo| |Unspecified
+Digoxin|ot|Demo| |Unspecified
+Ivabradine|ot|Demo| |Unspecified
+Ranolazine|ot|Demo| |Unspecified
+Nicorandil|ot|Demo| |Unspecified
+Lansoprazole|ot|Demo| |Unspecified
+Dexlansoprazole|ot|Demo| |Unspecified
+Cimetidine|ot|Demo| |Unspecified
+Itopride|ot|Demo| |Unspecified
+Mosapride|ot|Demo| |Unspecified
+Metoclopramide|ot|Demo| |Unspecified
+Granisetron|ot|Demo| |Unspecified
+Mebeverine|ot|Demo| |Unspecified
+Dicyclomine|ot|Demo| |Unspecified
+Lactulose|ot|Demo| |Unspecified
+Mesalazine|ot|Demo| |Unspecified
+Sulfasalazine|ot|Demo| |Unspecified
+Ursodeoxycholic acid|ot|Demo| |Unspecified
+Acetylcysteine|ot|Demo| |Unspecified
+Bromhexine|ot|Demo| |Unspecified
+Guaifenesin|ot|Demo| |Unspecified
+Dextromethorphan|ot|Demo| |Unspecified
+Roflumilast|ot|Demo| |Unspecified
+Zafirlukast|ot|Demo| |Unspecified
+Bilastine|ot|Demo| |Unspecified
+Rupatadine|ot|Demo| |Unspecified
+Ebastine|ot|Demo| |Unspecified
+Hydroxyzine|ot|Demo| |Unspecified
+Promethazine|ot|Demo| |Unspecified
+Ketotifen|ot|Demo| |Unspecified
+Fluoxetine|ot|Demo| |Unspecified
+Paroxetine|ot|Demo| |Unspecified
+Citalopram|ot|Demo| |Unspecified
+Venlafaxine|ot|Demo| |Unspecified
+Duloxetine|ot|Demo| |Unspecified
+Mirtazapine|ot|Demo| |Unspecified
+Bupropion|ot|Demo| |Unspecified
+Trazodone|ot|Demo| |Unspecified
+Nortriptyline|ot|Demo| |Unspecified
+Imipramine|ot|Demo| |Unspecified
+Lamotrigine|ot|Demo| |Unspecified
+Topiramate|ot|Demo| |Unspecified
+Zonisamide|ot|Demo| |Unspecified
+Oxcarbazepine|ot|Demo| |Unspecified
+Lacosamide|ot|Demo| |Unspecified
+Phenytoin|ot|Demo| |Unspecified
+Valproate|ot|Demo| |Unspecified
+Baclofen|ot|Demo| |Unspecified
+Tizanidine|ot|Demo| |Unspecified
+Ropinirole|ot|Demo| |Unspecified
+Pramipexole|ot|Demo| |Unspecified
+Levodopa|ot|Demo| |Unspecified
+Donepezil|ot|Demo| |Unspecified
+Rivastigmine|ot|Demo| |Unspecified
+Memantine|ot|Demo| |Unspecified
+Melatonin|ot|Demo| |Unspecified
+Pyridoxine|ot|Demo| |Unspecified
+Thiamine|ot|Demo| |Unspecified
+Riboflavin|ot|Demo| |Unspecified
+Biotin|ot|Demo| |Unspecified
+Niacin|ot|Demo| |Unspecified
+Tocopherol|ot|Demo| |Unspecified
+Ascorbic acid|ot|Demo| |Unspecified
+Magnesium|ot|Demo| |Unspecified
+Potassium iodide|ot|Demo| |Unspecified
+Dexamethasone|ot|Demo| |Unspecified
+Hydrocortisone|ot|Demo| |Unspecified
+Methylprednisolone|ot|Demo| |Unspecified
+Deflazacort|ot|Demo| |Unspecified
+Methimazole|ot|Demo| |Unspecified
+Carbimazole|ot|Demo| |Unspecified
+Colchicine|ot|Demo| |Unspecified
+Febuxostat|ot|Demo| |Unspecified
+Terbinafine|ot|Demo| |Unspecified
+Itraconazole|ot|Demo| |Unspecified
+Voriconazole|ot|Demo| |Unspecified
+Valacyclovir|ot|Demo| |Unspecified
+Famciclovir|ot|Demo| |Unspecified
+Oseltamivir|ot|Demo| |Unspecified
+Mebendazole|ot|Demo| |Unspecified
+Praziquantel|ot|Demo| |Unspecified
+Permethrin|ot|Demo| |Unspecified
+Finasteride|ot|Demo| |Unspecified
+Dutasteride|ot|Demo| |Unspecified
+Alfuzosin|ot|Demo| |Unspecified
+Silodosin|ot|Demo| |Unspecified
+Solifenacin|ot|Demo| |Unspecified
+Tolterodine|ot|Demo| |Unspecified
+Mirabegron|ot|Demo| |Unspecified
+Oxybutynin|ot|Demo| |Unspecified
+Methotrexate|ot|Demo| |Unspecified
+Azathioprine|ot|Demo| |Unspecified
+Mycophenolate|ot|Demo| |Unspecified
+Tacrolimus|ot|Demo| |Unspecified
+Ciclosporin|ot|Demo| |Unspecified`;
+const CAT={an:['Pain & fever','Relief of pain, inflammation and fever.','Nausea, stomach upset; liver or kidney strain at high doses.','Below 30 °C, dry, away from light.'],
+ab:['Antibiotic','Treatment of bacterial infections. Use only as prescribed.','Diarrhoea, nausea, rash; rare allergic reactions.','Below 25 °C, tightly closed.'],
+ad:['Diabetes','Blood-sugar control in type 2 diabetes.','Low blood sugar, stomach upset, weight change.','Below 30 °C, protected from moisture.'],
+cv:['Heart & blood pressure','Control of blood pressure, cholesterol and heart conditions.','Dizziness, fatigue, swelling of ankles, dry cough (ACE inhibitors).','Below 30 °C, dry place.'],
+gi:['Digestive','Acid reflux, ulcers, nausea and bowel problems.','Headache, bloating, constipation or loose stools.','Below 25 °C, dry place.'],
+rs:['Respiratory','Asthma, wheeze, cough and airway relief.','Tremor, palpitations, throat irritation, headache.','Below 25 °C; do not puncture inhalers.'],
+al:['Allergy','Relief from hay fever, hives and allergic reactions.','Drowsiness, dry mouth, headache.','Below 30 °C, dry place.'],
+ne:['Brain & mental health','Depression, anxiety, seizures and nerve pain.','Drowsiness, dizziness, weight change; dependence with some drugs.','Below 25 °C, locked controlled-drug cabinet where required.'],
+vt:['Vitamins & minerals','Corrects deficiencies and supports bone and blood health.','Mild stomach upset; dark stools with iron.','Below 30 °C, away from humidity.'],
+ot:['Hormonal, skin & other','Thyroid, inflammation, infections, parasites and skin conditions.','Varies by drug; see prescriber guidance.','Below 30 °C unless the pack says otherwise.']};
+const MFR=['Sun Pharma','Cipla','Lupin','Zydus','Dr. Reddy’s','Mankind','Alkem','Torrent'];
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=rng(20261117),DAY=864e5,NOW=new Date();NOW.setHours(0,0,0,0);
+const DB=[],MEDS={};
+RAW.split('\n').forEach((l,i)=>{const[n,c,ss,u,f]=l.split('|');const form=f||(c==='ab'||c==='ne'&&0?'Tablet':'Tablet');
+ const mfr=MFR[Math.floor(R()*MFR.length)];
+ MEDS[n]={name:n,cat:c,mfr,form,items:[]};
+ ss.split(',').forEach((s,j)=>{
+  const daily=+(0.6+R()*R()*14).toFixed(1),trend=+(R()*.6-.25).toFixed(2),r=R();
+  let dte=r<.03?-Math.ceil(5+R()*50):r<.08?Math.ceil(1+R()*29):r<.20?Math.ceil(31+R()*59):Math.ceil(91+R()*630);
+  let stock=R()<.04?0:Math.round(daily*(4+R()*140));
+  const fc=daily*(1+trend),price=Math.round(12+R()*380),reorder=Math.round(daily*14);
+  const sell=fc>0?stock/fc:999,sold=Math.max(0,fc*Math.max(dte,0)),waste=dte<0?stock:Math.max(0,Math.round(stock-sold));
+  const ratio=stock?waste/stock:0;
+  let score=dte<0?100:Math.min(99,Math.round(ratio*75+(dte<30?25:dte<90?12:0)));
+  if(!stock)score=0;
+  const level=dte<0&&stock?'Critical':score>=70?'Critical':score>=40?'High':score>=15?'Medium':'Low';
+  const status=!stock?'Out':stock<reorder?'Low-stock':'In';
+  const m={id:'PT-'+String(DB.length+1).padStart(4,'0'),name:n,strength:s==='Demo'?'':s+' '+u,form,cat:c,mfr,batch:'B'+Math.floor(10000+R()*89999),stock,reorder,daily:fc,expiry:new Date(NOW.getTime()+dte*DAY),dte,price,sell,waste,score,level,status,
+   expired:dte<0&&stock>0,
+   action:!stock?'Reorder now':dte<0?'Quarantine and dispose':level==='Critical'?'Review supplier return':level==='High'?'Review for priority dispensing':status==='Low-stock'?'Reorder soon':level==='Medium'?'Monitor weekly':'No action needed'};
+  DB.push(m);MEDS[n].items.push(m);});
+});
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=n=>Math.round(n).toLocaleString('en-IN'),inr=n=>'₹'+fmt(n);
+const dt=d=>d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+const temporaryStore=new Map();const store={get(k){if(temporaryStore.has(k))return temporaryStore.get(k);try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){temporaryStore.set(k,v);try{localStorage.setItem(k,v)}catch(e){}},del(k){temporaryStore.set(k,null);try{localStorage.removeItem(k)}catch(e){}}};
+const L2S={Low:'Safe',Medium:'Warning',High:'Warning',Critical:'Danger'},T2S={In:'Safe','Low-stock':'Warning',Out:'Danger'},TL={In:'In stock','Low-stock':'Low stock',Out:'Out of stock'};
+const tag=(c,l)=>`<span class="b ${c}">${l}</span>`,lt=m=>tag(L2S[m.level],m.level);
+let S={v:'dash',q:'',cat:'',stat:'',group:true,page:1,lvl:''};
+function go(v){S={...S,v,q:'',cat:'',stat:'',lvl:'',page:1};document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));scrollTo(0,0);({dash,inv,risk,info,alerts,add,states,usability})[v]()}
+const head=(t,s)=>`<h1>${t}</h1><p class="muted">${s}</p>`;
+setInterval(()=>{const r=$('#rf');if(r)r.textContent=new Date().toLocaleTimeString('en-GB')},10000);
+
+/* dashboard */
+function mcard(m){const s=L2S[m.level];return `<button class="mc c-${s}" onclick="openMed('${esc(m.name)}')"><div class="r"><div><strong>${m.name} ${m.strength}</strong><br><small>${m.form} · ${m.mfr}</small></div>${tag(s,m.level)}</div>
+ <div class="big">${fmt(m.stock)} <span>units</span></div><div class="pb"><i style="width:${m.score}%"></i></div><small class="muted">Risk score ${m.score} · Warning 40 / Danger 70</small>
+ <div class="f"><span>${m.dte<0?'Expired':m.dte+' days left'}</span><span>${m.batch}</span></div></button>`}
+const regions=['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Delhi'];
+const originalCount=DB.length; for(let i=0;i<75;i++){let m=DB[i];DB.push({...m,id:'PT-EX-'+String(i+1).padStart(3,'0'),batch:'EX-'+(1000+i),stock:100+i*3,expiry:new Date(NOW.getTime()+(120+i*4)*DAY),dte:120+i*4,expired:false,level:'Low',score:0,waste:0});}
+for(let i=0;i<25;i++){let m=DB[i],dte=-i-2;DB.push({...m,id:'PT-OLD-'+String(i+1).padStart(3,'0'),batch:'OLD-'+(2000+i),stock:30+i*2,expiry:new Date(NOW.getTime()+dte*DAY),dte,expired:true,level:'Critical',score:100,waste:30+i*2,action:'Quarantine and dispose'});}
+DB.forEach((m,i)=>m.state=regions[i%regions.length]);
+const status=m=>m.dte<0?'Expired':m.dte<=30?'Critical':m.dte<=90?'Warning':'Safe';
+function rows(list,actions=false){return list.map((m,i)=>`<tr><td>${i+1}</td><td><b>${esc(m.name)} ${esc(m.strength)}</b></td><td>${esc(m.mfr)}</td><td>${esc(m.batch)}</td><td>${CAT[m.cat][0]}</td><td>${dt(m.expiry)}</td><td>${m.dte}</td><td>${fmt(m.stock)}</td><td>${inr(m.price)}</td><td>${tag(status(m)==='Expired'||status(m)==='Critical'?'Danger':status(m),status(m))}</td><td>${actions?`<button class="btn alt sm" onclick="openMed(DB[${DB.indexOf(m)}].name)">View</button> <button class="btn alt sm" onclick="editBatch(${DB.indexOf(m)})">Edit</button> <button class="btn alt sm" onclick="deleteBatch(${DB.indexOf(m)})">Delete</button>`:'—'}</td></tr>`).join('')}
+const columns='<thead><tr>'+['#','Medicine','Manufacturer','Batch','Category','Expiry','Days left','Qty','Price','Status','Actions'].map(x=>`<th>${x}</th>`).join('')+'</tr></thead>';
+function stateRows(){return regions.map(r=>{let a=DB.filter(m=>m.state===r);return `<tr><td>${r}</td><td>${a.length}</td><td>${fmt(a.reduce((n,m)=>n+m.stock,0))}</td></tr>`}).join('')}
+function overview(target,auth){const counts=['Total','Expired','Critical','Warning','Safe'].map((x,i)=>[x,i?DB.filter(m=>status(m)===x).length:DB.length,['#4165e5','#c33430','#d15725','#cf802b','#4c9b55'][i]]);$(target).innerHTML=head('Medicine Dashboard','Expiry prediction & inventory overview — India · Sample inventory')+`<div class="kpis five">${counts.map(([l,n,c])=>`<div class="box kpi metric" style="--metric:${c}"><small>${l}</small><b>${n}</b><hr></div>`).join('')}</div><div class="summary-grid"><div class="box panel"><div class="panel-head">🗺️ State-wise Distribution ${auth?'<button class="btn alt sm" onclick="go(\'states\')">View All →</button>':''}</div><div class="tw"><table class="mini"><thead><tr><th>State</th><th>Medicines</th><th>Total qty</th></tr></thead><tbody>${stateRows()}</tbody></table></div></div></div><div class="box panel"><div class="panel-head">🗃️ Inventory (${DB.length} medicines / batches)<input type="search" placeholder="Search medicines..." class="ds"></div><div class="tw"><table>${columns}<tbody class="dr">${rows(DB,auth)}</tbody></table></div></div>`;$(target+' .ds').oninput=e=>$(target+' .dr').innerHTML=rows(DB.filter(m=>(m.name+' '+m.batch).toLowerCase().includes(e.target.value.toLowerCase())),auth)}
+function dash(){overview('#main',true)}
+function states(){$('#main').innerHTML=head('State-wise Distribution','Inventory by state')+`<div class="box tw"><table><thead><tr><th>State</th><th>Medicines</th><th>Total qty</th></tr></thead><tbody>${stateRows()}</tbody></table></div>`}
+function usability(){const expired=DB.filter(m=>m.dte<0).length;$('#main').innerHTML=head('Usability','Expiry-date screening only; pharmacist verification required. Expired stock must not be dispensed.')+`<div class="kpis"><div class="box kpi"><b>${expired}</b><small>Expired batches</small></div><div class="box kpi"><b>${DB.length-expired}</b><small>Unexpired batches</small></div></div><div class="tools"><select id="uf"><option value="Expired">Expired medicines</option><option value="All">All medicines</option><option value="Unexpired">Unexpired medicines</option><option value="Critical">Critical (0–30 days)</option><option value="Warning">Warning (31–90 days)</option><option value="Safe">Over 90 days remaining</option></select></div><div class="box tw"><table>${columns}<tbody id="ur"></tbody></table></div>`;function render(){let f=$('#uf').value;$('#ur').innerHTML=rows(DB.filter(m=>f==='All'||(f==='Unexpired'?m.dte>=0:status(m)===f)).sort((a,b)=>a.dte-b.dte),true)||'<tr><td colspan="11">No matching batches</td></tr>'}$('#uf').onchange=render;render()}
+function add(){$('#main').innerHTML=head('Add Medicine','Add an inventory batch.')+`<form id="af" class="box kpi"><label>Medicine name<input id="aname" required></label><label>Batch<input id="abatch" required></label><label>Manufacturer<input id="amfr" required></label><label>Expiry date<input type="date" id="aexp" required></label><label>Quantity<input type="number" id="aqty" min="0" required></label><label>Price<input type="number" id="aprice" min="0" required></label><p><button class="btn">Add medicine</button></p></form>`;$('#af').onsubmit=async e=>{e.preventDefault();let name=$('#aname').value.trim();if(!name)return;let expiry=new Date($('#aexp').value+'T00:00:00'),dte=Math.round((expiry-NOW)/DAY),stock=+$('#aqty').value,level=dte<0?'Critical':dte<=30?'High':dte<=90?'Medium':'Low',m={id:'PT-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),name,strength:'',form:'Unspecified',cat:'ot',mfr:$('#amfr').value,batch:$('#abatch').value,stock,reorder:0,daily:0,expiry,dte,price:+$('#aprice').value,sell:999,waste:dte<0?stock:0,score:dte<0?100:0,level,status:stock?'In':'Out',expired:dte<0&&stock>0,action:'Review manually',state:regions[0]};if(await saveChange('medicines','POST',m,()=>DB.push(m)))go('dash')}}
+/* shared */
+function pager(n,per,id){const p=Math.max(1,Math.ceil(n/per));S.page=Math.min(S.page,p);return `<div class="pg"><span class="muted">${n} results</span><span><button class="btn alt sm" ${S.page<2?'disabled':''} onclick="S.page--;${id}()">Previous</button> Page ${S.page} of ${p} <button class="btn alt sm" ${S.page>=p?'disabled':''} onclick="S.page++;${id}()">Next</button></span></div>`}
+const catOpts=()=>'<option value="">All categories</option>'+Object.entries(CAT).map(([k,v])=>`<option value="${k}" ${S.cat===k?'selected':''}>${v[0]}</option>`).join('');
+function bind(fn){const q=$('#q');q.oninput=()=>{S.q=q.value;S.page=1;fn()};document.querySelectorAll('[data-f]').forEach(s=>s.onchange=()=>{S[s.dataset.f]=s.value;S.page=1;fn()})}
+const match=m=>(!S.q||(m.name+' '+m.strength+' '+m.mfr+' '+m.id).toLowerCase().includes(S.q.toLowerCase()))&&(!S.cat||m.cat===S.cat);
+
+/* inventory */
+function inv(){$('#main').innerHTML=head('Inventory','Total medicines and available stock. Select a row for full details.')+`<div class="tools"><input id="q" type="search" placeholder="Search medicine, strength or manufacturer" aria-label="Search"><select data-f="cat" aria-label="Category">${catOpts()}</select>
+ <select data-f="stat" aria-label="Stock status"><option value="">Any stock status</option><option value="In">In stock</option><option value="Low-stock">Low stock</option><option value="Out">Out of stock</option></select>
+ <div class="seg"><button id="g1" class="${S.group?'on':''}">By medicine</button><button id="g0" class="${S.group?'':'on'}">By batch</button></div></div><div class="box"><div class="tw" id="tbl"></div></div><div id="pgr"></div>`;
+ bind(invT);$('#g1').onclick=()=>{S.group=true;S.page=1;inv()};$('#g0').onclick=()=>{S.group=false;S.page=1;inv()};invT()}
+function invT(){const per=20;let h,n,pg;
+ if(S.group){let l=Object.values(MEDS).filter(m=>(!S.q||m.name.toLowerCase().includes(S.q.toLowerCase()))&&(!S.cat||m.cat===S.cat)).map(m=>({...m,stock:m.items.reduce((a,x)=>a+x.stock,0),reorder:m.items.reduce((a,x)=>a+x.reorder,0),risky:m.items.filter(x=>x.stock&&(x.level==='Critical'||x.level==='High')).length,next:m.items.filter(x=>x.stock).sort((a,b)=>a.dte-b.dte)[0]}));
+  l=l.filter(m=>!S.stat||(S.stat==='Out'?m.stock===0:S.stat==='Low-stock'?m.stock>0&&m.stock<m.reorder:m.stock>=m.reorder));n=l.length;pg=l.slice((S.page-1)*per,S.page*per);
+  h=`<table><thead><tr><th>Medicine</th><th>Category</th><th>Packs</th><th>Total units</th><th>Status</th><th>Nearest expiry</th><th>Risky batches</th></tr></thead><tbody>`+pg.map(m=>{const s=m.stock===0?'Out':m.stock<m.reorder?'Low-stock':'In';return `<tr onclick="openMed('${esc(m.name)}')"><td><b>${m.name}</b><br><small class="muted">${m.mfr}</small></td><td>${CAT[m.cat][0]}</td><td class="n">${m.items.length}</td><td class="n">${fmt(m.stock)}</td><td>${tag(T2S[s],TL[s])}</td><td>${m.next?dt(m.next.expiry):'–'}</td><td class="n">${m.risky}</td></tr>`}).join('')}
+ else{const l=DB.filter(m=>match(m)&&(!S.stat||m.status===S.stat));n=l.length;pg=l.slice((S.page-1)*per,S.page*per);
+  h=`<table><thead><tr><th>ID</th><th>Medicine</th><th>Form</th><th>Batch</th><th>Available</th><th>Status</th><th>Expiry</th><th>Risk</th></tr></thead><tbody>`+pg.map(m=>`<tr onclick="openMed('${esc(m.name)}')"><td class="muted">${m.id}</td><td><b>${m.name}</b> ${m.strength}</td><td>${m.form}</td><td>${m.batch}</td><td class="n">${fmt(m.stock)}</td><td>${tag(T2S[m.status],TL[m.status])}</td><td>${dt(m.expiry)}</td><td>${m.stock?lt(m):'–'}</td></tr>`).join('')}
+ $('#tbl').innerHTML=n?h+'</tbody></table>':'<div class="empty">No medicines match. Clear the search or change a filter.</div>';$('#pgr').innerHTML=pager(n,per,'invT')}
+
+/* risk */
+function risk(){$('#main').innerHTML=head('Expiry Risk Analysis','Demo heuristic (not a trained ML model): each batch is scored by comparing estimated demand with days left before expiry. 70 and above is danger, 40 to 69 is warning.')+`<div class="tools"><input id="q" type="search" placeholder="Search medicine" aria-label="Search"><select data-f="cat" aria-label="Category">${catOpts()}</select>
+ <select data-f="lvl" aria-label="Risk level"><option value="">All risk levels</option>${['Critical','High','Medium','Low'].map(l=>`<option>${l}</option>`).join('')}</select></div><div class="box"><div class="tw" id="tbl"></div></div><div id="pgr"></div>`;bind(riskT);riskT()}
+function riskT(){const per=20,l=DB.filter(m=>m.stock&&match(m)&&(!S.lvl||m.level===S.lvl)).sort((a,b)=>b.score-a.score||b.waste*b.price-a.waste*a.price),n=l.length,pg=l.slice((S.page-1)*per,S.page*per);
+ $('#tbl').innerHTML=n?`<table><thead><tr><th>Medicine</th><th>Stock</th><th>Days to expiry</th><th>Forecast sell-out</th><th>Risk</th><th>Units at risk</th><th>Value</th><th>Recommended action</th></tr></thead><tbody>`+pg.map(m=>`<tr onclick="openMed('${esc(m.name)}')"><td><b>${m.name}</b> ${m.strength}<br><small class="muted">${m.batch}</small></td><td class="n">${fmt(m.stock)}</td><td class="n">${m.dte<0?tag('Danger','Expired'):m.dte}</td><td class="n">${m.sell>900?'No demand':Math.round(m.sell)+' days'}</td><td>${lt(m)} <small>${m.score}</small></td><td class="n">${fmt(m.waste)}</td><td class="n">${inr(m.waste*m.price)}</td><td>${m.action}</td></tr>`).join('')+'</tbody></table>':'<div class="empty">No batches at this risk level.</div>';$('#pgr').innerHTML=pager(n,per,'riskT')}
+
+/* medicine info */
+function info(){$('#main').innerHTML=head('Medicine Information',`${Object.keys(MEDS).length} medicines with uses, side effects, storage and stock.`)+`<div class="tools"><input id="q" type="search" placeholder="Search medicines" aria-label="Search"><select data-f="cat" aria-label="Category">${catOpts()}</select></div><div class="cards" id="cds"></div>`;bind(infoT);infoT()}
+function infoT(){const l=Object.values(MEDS).filter(m=>(!S.q||m.name.toLowerCase().includes(S.q.toLowerCase()))&&(!S.cat||m.cat===S.cat));
+ $('#cds').innerHTML=l.length?l.map(m=>{const u=m.items.reduce((a,x)=>a+x.stock,0),r=m.items.reduce((a,x)=>a+x.reorder,0),s=u===0?'Out':u<r?'Low-stock':'In';return `<button class="mc c-${T2S[s]}" onclick="openMed('${esc(m.name)}')"><div class="r"><strong>${m.name}</strong>${tag(T2S[s],TL[s])}</div><small>${CAT[m.cat][0]} · ${m.form}</small><div class="big">${fmt(u)} <span>units</span></div><div class="f"><span>${m.items.length} strengths</span><span>${m.mfr}</span></div></button>`}).join(''):'<div class="empty">No medicines found for that search.</div>'}
+
+/* alerts + admin */
+function alerts(){const A=[];DB.forEach(m=>{if(m.expired)A.push([0,m,'Expired – '+fmt(m.stock)+' units must be removed from stock','Danger']);else if(m.stock&&m.level==='Critical')A.push([1,m,'Expires in '+m.dte+' days with '+fmt(m.waste)+' units unlikely to sell','Danger']);else if(!m.stock)A.push([2,m,'Out of stock – reorder now','Danger']);else if(m.stock&&m.level==='High')A.push([3,m,'High expiry risk – dispense first','Warning']);else if(m.status==='Low-stock')A.push([4,m,'Low stock – '+fmt(m.stock)+' left, reorder level '+fmt(m.reorder),'Warning'])});
+ A.sort((a,b)=>a[0]-b[0]);$('#main').innerHTML=head('Alerts',`${A.length} active alerts, most urgent first.`)+A.slice(0,60).map(([,m,t,s])=>`<div class="al c-${s}" onclick="openMed('${esc(m.name)}')"><span><b>${m.name} ${m.strength}</b> · ${m.batch}<br><span class="muted">${t}</span></span>${tag(s,s)}</div>`).join('')+(A.length>60?`<p class="muted">Showing the 60 most urgent alerts.</p>`:'')}
+function openMed(n){const m=MEDS[n],c=CAT[m.cat];
+ $('#mbody').innerHTML=`<div style="display:flex;justify-content:space-between;gap:1rem"><div><h2>${m.name}</h2><span class="muted">${c[0]} · ${m.form}</span></div><button class="btn alt sm" id="x">Close</button></div>
+ <dl class="dl"><dt>Used for</dt><dd>See verified product information</dd><dt>Common side effects</dt><dd>See package leaflet</dd><dt>Storage</dt><dd>Follow product label</dd><dt>Manufacturer</dt><dd>${m.mfr}</dd></dl>
+ <h3 style="font-size:1rem;margin-bottom:.5rem">Stock by strength</h3><div class="tw"><table style="min-width:520px"><thead><tr><th>Strength</th><th>Available</th><th>Expiry</th><th>Risk</th><th>Price</th></tr></thead><tbody>${m.items.map(x=>`<tr style="cursor:default"><td>${x.strength}</td><td class="n">${fmt(x.stock)}</td><td>${dt(x.expiry)}</td><td>${x.stock?lt(x):tag('Danger','Out of stock')}</td><td>${inr(x.price)}</td></tr>`).join('')}</tbody></table></div>
+ <p class="muted" style="font-size:12px;margin-bottom:0">Illustrative category information and synthetic stock data; not verified product-specific guidance. Check the actual medicine label and pharmacist guidance.</p>`;
+ $('#modal').classList.remove('hide');$('#x').focus();$('#x').onclick=closeM}
+function closeM(){$('#modal').classList.add('hide')}
+$('#modal').onclick=e=>{if(e.target.id==='modal')closeM()};addEventListener('keydown',e=>{if(e.key==='Escape')closeM()});
+const V=[['dash','Dashboard'],['add','+ Add Medicine'],['states','States'],['usability','Usability'],['info','Knowledge']];
+$('#tabs').innerHTML=V.map(([k,l])=>`<button data-v="${k}">${l}</button>`).join('');$('#tabs').onclick=e=>{const b=e.target.closest('button');if(b)go(b.dataset.v)};
+const expandedSeeds=DB.filter(m=>m.id.startsWith("PT-EX-")||m.id.startsWith("PT-OLD-"));let online=false;
+function rebuild(){Object.keys(MEDS).forEach(k=>delete MEDS[k]);DB.forEach(m=>{m.expiry=new Date(m.expiry);m.dte=Math.round((m.expiry-NOW)/DAY);m.expired=m.dte<0&&m.stock>0;m.level=m.dte<0?'Critical':m.dte<=30?'High':m.dte<=90?'Medium':'Low';m.status=m.stock?'In':'Out';(MEDS[m.name]??={name:m.name,cat:m.cat,mfr:m.mfr,form:m.form,items:[]}).items.push(m)})}
+async function api(path,method='GET',data){const r=await fetch('/api/'+path,{method,headers:{'Content-Type':'application/json'},...(data===undefined?{}:{body:JSON.stringify(data)})});if(!r.ok)throw Error(await r.text());return r.json()}
+async function init(){try{await api('inventory');await api('seed','POST',{medicines:DB});let data=await api('inventory');DB.splice(0,DB.length,...data.medicines);online=true;$('#dbstatus').textContent='MongoDB connected'}catch(e){try{let d=JSON.parse(localStorage.getItem('pt_inventory_v2'));if(d&&Array.isArray(d.medicines)){DB.splice(0,DB.length,...d.medicines);if(!d.usabilityExpanded){const ids=new Set(DB.map(m=>m.id));DB.push(...expandedSeeds.filter(m=>!ids.has(m.id)));}}localStorage.setItem('pt_inventory_v2',JSON.stringify({medicines:DB,expanded:true,usabilityExpanded:true}))}catch(e){}$('#dbstatus').textContent='Local demo — MongoDB not connected'}rebuild();go('dash')}
+async function saveChange(path,method,data,local){try{if(online)await api(path,method,data);local();rebuild();if(!online)localStorage.setItem('pt_inventory_v2',JSON.stringify({medicines:DB,expanded:true,usabilityExpanded:true}));return true}catch(e){alert('Save failed: '+e.message);return false}}
+async function editBatch(i){let m=DB[i];let q=prompt('New quantity',m.stock);if(q===null)return;let p=prompt('New price',m.price);if(p===null)return;let ex=prompt('Expiry date (YYYY-MM-DD)',m.expiry.toISOString().slice(0,10));if(ex===null)return;if(!/^\d{4}-\d{2}-\d{2}$/.test(ex)||!Number.isFinite(Date.parse(ex))||!Number.isInteger(+q)||+q<0||!Number.isFinite(+p)||+p<0)return alert('Invalid values');let patch={stock:+q,price:+p,expiry:new Date(ex+'T00:00:00').toISOString()};if(await saveChange('medicines/'+encodeURIComponent(m.id),'PATCH',patch,()=>Object.assign(m,patch)))go('dash')}
+async function deleteBatch(i){let m=DB[i];if(confirm('Delete '+m.name+'?')&&await saveChange('medicines/'+encodeURIComponent(m.id),'DELETE',undefined,()=>DB.splice(i,1)))go('dash')}
+init();
+</script></body></html>
